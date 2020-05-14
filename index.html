@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+    <div class="top">
+      <div class="heading">
+        <header>
+          <a href="#">bubble.test</a>
+        </header>
+        <h1>Test Your Reaction Speed</h1>
+        <p>A chance for you to prove your superior reaction speed.</p>
+        <p id="rule">Click the bubbles as fast as you can!</p>
+        <p>If the bubbles cover most of the screen its GAME OVER!!</p>
+        <p>Use the potion to slow down time but this can only be used twice.</p>
+        <p>Use the bomb to clear out half the bubbles.</p>
+        <p>
+          Beware of the rock bubbles which require multiple clicks to be
+          destroyed.
+        </p>
+      </div>
+    </div>
+    <div class="gameContent">
+      <div>
+        <span id="timer"></span>
+      </div>
+      <div id="tableSpace">
+        <div class="gameMode" id="gameMode">
+          <h2>CLICK TO START GAME:</h2>
+          <input type="button" value="START" id="btnStart" />
+        </div>
+        <div>
+          <canvas id="myCanvas" width="700" height="700"></canvas>
+        </div>
+        <button type="button" id="playBtn">PLAY</button>
+        <button type="button" id="pauseBtn">PAUSE</button>
+      </div>
+    </div>
+    <script src="index.js"></script>
+  </body>
+</html>
