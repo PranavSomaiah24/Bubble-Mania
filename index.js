@@ -5,12 +5,12 @@ let bubbles = [];
 let mouseX, mouseY;
 let score = 0;
 let bubbleArea = 0;
-let bubbleSpeed = 50;
+let bubbleSpeed = 30;
 let BubbleCount = 0;
 let isSlow = false;
 let timeCount = 0;
 let bombOnScreen = false;
-let highScore, interval, startTime;
+let highScore;
 let isRockEntered = false;
 let pop = new Audio("Gum_Bubble_Pop-Sound_Explorer-1206462561.mp3"),
   explosion = new Audio("Explosion+1.mp3"),
@@ -25,7 +25,7 @@ function init() {
     (ctx = canvas.getContext("2d"));
 }
 init();
-const area = canvas.width * canvas.height * 0.6;
+const area = canvas.width * canvas.height * 0.25;
 
 function startTimer(duration, display) {
   display.style.display = "block";
@@ -41,9 +41,9 @@ function startTimer(duration, display) {
   }, 1000);
 }
 
-function Bubble() {
-  this.x = Math.floor(Math.random() * 300 + 100);
-  this.y = Math.floor(Math.random() * 300 + 180);
+function Bubble(x, y, radius) {
+  this.x = x;
+  this.y = y;
   this.colour =
     "rgba(" +
     Math.floor(Math.random() * 256).toString() +
@@ -53,11 +53,12 @@ function Bubble() {
     Math.floor(Math.random() * 256).toString() +
     ",0.8";
   (")");
-  this.radius = Math.floor(Math.random() * 40 + 40);
-  this.vx = Math.floor(Math.random() * 5);
-  this.vy = Math.floor(Math.random() * 5);
+  this.radius = radius;
+  this.vx = Math.floor(Math.random() * 4);
+  this.vy = Math.floor(Math.random() * 4);
   this.counted = false;
   this.clicks = 1;
+  this.mass = 1;
   this.draw = function () {
     ctx.save();
     ctx.translate(this.x, this.y);
@@ -68,7 +69,18 @@ function Bubble() {
     ctx.fill();
     ctx.restore();
   };
-  this.update = function () {
+  this.update = function (bubbles) {
+    for (i = 0; i < bubbles.length; i++) {
+      if (this == bubbles[i] || bubbles[i].mass == 2) {
+        continue;
+      }
+      dxx = bubbles[i].x - this.x;
+      dyy = bubbles[i].y - this.y;
+      distance = Math.sqrt(dxx * dxx + dyy * dyy);
+      if (distance < bubbles[i].radius + this.radius)
+        resolveCollision(this, bubbles[i]);
+    }
+
     if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
       this.vx *= -1;
     }
@@ -89,6 +101,7 @@ function RockBubble() {
   this.clicks = 5;
   this.img = new Image();
   this.img.src = "Asteroid Brown.png";
+  this.mass = 2;
   this.draw = function () {
     ctx.save();
     ctx.translate(this.x, this.y);
@@ -96,11 +109,11 @@ function RockBubble() {
     ctx.drawImage(this.img, 0, 0, this.radius, this.radius);
     ctx.restore();
   };
-  this.update = function () {
-    if (this.x + this.radius > canvas.width || this.x + 30 < 0) {
+  this.update = function (bubbles) {
+    if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
       this.vx *= -1;
     }
-    if (this.y + this.radius > canvas.height || this.y + 5 < 80) {
+    if (this.y + this.radius > canvas.height || this.y - this.radius < 80) {
       this.vy *= -1;
     }
     this.x += this.vx;
@@ -125,6 +138,12 @@ function drawHighScore() {
   ctx.fillText("HIGHSCORE: " + localStorage.getItem(highScore), 0, 0);
   ctx.restore();
 }
+
+function circleIntersect(x1, y1, r1, x2, y2, r2) {
+  let circleDistance = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+  return circleDistance <= (r1 - r2) * (r1 - r2);
+}
+
 function checkHighScore() {
   let high;
   if (
@@ -135,13 +154,38 @@ function checkHighScore() {
     localStorage.setItem(highScore, high.toString());
   }
 }
+
 function addBubble() {
-  obj = new Bubble();
+  let isInside = false;
+  if (bubbles.length > 0) {
+    x = Math.floor(Math.random() * 300 + 100);
+    y = Math.floor(Math.random() * 300 + 180);
+    radius = Math.floor(Math.random() * 40 + 30);
+    for (j = 0; j < bubbles.length; j++) {
+      dx = bubbles[j].x - x;
+      dy = bubbles[j].y - y;
+      distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance <= radius + bubbles[j].radius) {
+        isInside = true;
+        break;
+      }
+    }
+    if (isInside == false) {
+      obj = new Bubble(x, y, radius);
+      bubbles.push(obj);
+    }
+  } else {
+    x = Math.floor(Math.random() * 300 + 100);
+    y = Math.floor(Math.random() * 300 + 180);
+    radius = Math.floor(Math.random() * 40 + 30);
+    obj = new Bubble(x, y, radius);
+    bubbles.push(obj);
+  }
   if (score % 25 == 0 && score != 0 && isRockEntered == false) {
     obj = new RockBubble();
     isRockEntered = true;
+    bubbles.push(obj);
   }
-  bubbles.push(obj);
 }
 let frame = 0;
 let isClicked = false;
@@ -271,6 +315,50 @@ function Particle(x, y) {
 function clicked(mouseX, mouseY) {
   explosions.push(new Explosion(mouseX, mouseY));
 }
+function rotate(vx, vy, angle) {
+  const rotatedVelocities = {
+    x: vx * Math.cos(angle) - vy * Math.sin(angle),
+    y: vx * Math.sin(angle) + vy * Math.cos(angle),
+  };
+
+  return rotatedVelocities;
+}
+function resolveCollision(particle, otherParticle) {
+  const xVelocityDiff = particle.vx - otherParticle.vx;
+  const yVelocityDiff = particle.vy - otherParticle.vy;
+
+  const xDist = otherParticle.x - particle.x;
+  const yDist = otherParticle.y - particle.y;
+
+  if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
+    const angle = -Math.atan2(
+      otherParticle.y - particle.y,
+      otherParticle.x - particle.x
+    );
+
+    const m1 = particle.mass;
+    const m2 = otherParticle.mass;
+
+    const u1 = rotate(particle.vx, particle.vy, angle);
+    const u2 = rotate(otherParticle.vx, otherParticle.vy, angle);
+    const v1 = {
+      x: (u1.x * (m1 - m2)) / (m1 + m2) + (u2.x * 2 * m2) / (m1 + m2),
+      y: u1.y,
+    };
+    const v2 = {
+      x: (u2.x * (m1 - m2)) / (m1 + m2) + (u1.x * 2 * m2) / (m1 + m2),
+      y: u2.y,
+    };
+
+    const vFinal1 = rotate(v1.x, v1.y, -angle);
+    const vFinal2 = rotate(v2.x, v2.y, -angle);
+
+    particle.vx = vFinal1.x;
+    particle.vy = vFinal1.y;
+    otherParticle.vx = vFinal2.x;
+    otherParticle.vy = vFinal2.y;
+  }
+}
 function drawExplosion() {
   if (explosions.length === 0) {
     return;
@@ -322,7 +410,7 @@ function animate() {
   let dx, dy;
 
   if (gameOver == false && !isPaused) {
-    if (frame > bubbleSpeed - Math.floor(score / 15) * 2 && isSlow == false) {
+    if (frame > bubbleSpeed - Math.floor(score / 10) * 2 && isSlow == false) {
       addBubble();
       frame = 0;
       count = 0;
@@ -349,8 +437,8 @@ function animate() {
       isSpliced = false;
       dx = 0;
       dy = 0;
+      bubbles[i].update(bubbles);
       bubbles[i].draw();
-      bubbles[i].update();
       if (bubbles[i].counted == false) {
         bubbleArea += bubbles[i].radius * bubbles[i].radius * Math.PI;
         bubbles[i].counted = true;
@@ -380,6 +468,7 @@ function animate() {
         isClicked = false;
       }
     }
+
     if (BubbleCount % 35 == 0 && BubbleCount != 0 && bombOnScreen == false) {
       bomb = new BombSprite();
       bombOnScreen = true;
