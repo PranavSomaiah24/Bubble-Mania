@@ -1,5 +1,5 @@
 # Spider-Task-2
-Click [here](https://dammit24.github.io/Spider-Task-2/) for working demo
+Click [here](https://PranavSomaiah.github.io/Spider-Task-2/) for working demo
  ## Advanced Task Feature
  Animation on bubble burst <br />
  Rock  bubbles with sprite <br />
