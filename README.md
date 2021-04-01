@@ -1,4 +1,4 @@
-# Spider-Task-2
+# Bubble Mania
 Burst all the bubbles before the timer runs out!! <br />
 Make sure to watch out for surprises!! <br />
 Click [here](https://pranavsomaiah24.github.io/Bubble-Mania/) for working demo
