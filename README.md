@@ -1,7 +1,7 @@
 # Spider-Task-2
 Burst all the bubbles before the timer runs out!! <br />
 Make sure to watch out for surprises!! <br />
-Click [here](https://pranavsomaiah24.github.io/Spider-Task-2/) for working demo
+Click [here](https://pranavsomaiah24.github.io/Bubble-Mania/) for working demo
  ## Advanced Task Feature
  Animation on bubble burst <br />
  Rock  bubbles with sprite <br />
